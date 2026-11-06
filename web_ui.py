@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Web UI cho Video Translate Super.
+Web UI cho Subtitle Translator.
 Cung cấp giao diện trực quan chọn vùng phụ đề (crop box) để OCR và điều khiển translate.py.
 """
 import argparse
@@ -580,7 +580,7 @@ def find_free_port(start_port=7860, max_attempts=20):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Web UI cho Video Translate Super")
+    parser = argparse.ArgumentParser(description="Web UI cho Subtitle Translator")
     parser.add_argument("--port", type=int, default=0, help="Cổng chạy server (mặc định: tự tìm cổng từ 7860)")
     parser.add_argument("--no-browser", action="store_true", help="Không tự động mở trình duyệt")
     args = parser.parse_args()
@@ -595,7 +595,7 @@ def main():
     httpd = ThreadedHTTPServer(server_address, AppRequestHandler)
     url = f"http://127.0.0.1:{port}"
     print(f"\n=======================================================")
-    print(f"  🎬 Video Translate Super - OCR Region Selector UI")
+    print(f"  🎬 Subtitle Translator - OCR Region Selector UI")
     print(f"  Truy cập: {url}")
     print(f"  Nhấn Ctrl+C để dừng server.")
     print(f"=======================================================\n")

@@ -1,4 +1,4 @@
-# Video Translate Super
+# Subtitle Translator
 
 Công cụ tạo phụ đề tiếng Việt cho video tiếng Trung, kết hợp nhận dạng giọng nói, OCR và dịch bằng AI. Ứng dụng chạy trên máy, có giao diện web để chọn vùng phụ đề và chỉnh sửa SRT, cùng CLI để xử lý theo lô.
 
@@ -26,8 +26,8 @@ Các script ưu tiên FFmpeg tại `/opt/homebrew/opt/ffmpeg-full/bin` nếu có
 ### 1. Clone và chạy
 
 ```sh
-git clone https://github.com/htcuong27/video-translate-super.git
-cd video-translate-super
+git clone https://github.com/htcuong27/subtitle-translator.git
+cd subtitle-translator
 ./ui.sh
 ```
 
