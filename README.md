@@ -26,8 +26,8 @@ Các script ưu tiên FFmpeg tại `/opt/homebrew/opt/ffmpeg-full/bin` nếu có
 ### 1. Clone và chạy
 
 ```sh
-git clone https://github.com/htcuong27/video-translate-super.git
-cd video-translate-super
+git clone https://github.com/htcuong27/subtitle-translator.git
+cd subtitle-translator
 ./ui.sh
 ```
 
