@@ -1,0 +1,15 @@
+[project]
+name = "video-translate-super"
+version = "0.1.0"
+description = "Dịch phụ đề video tiếng Trung sang tiếng Việt"
+requires-python = ">=3.11"
+# faster-whisper 1.2.1 passes metadata_errors, which PyAV 19 removed.
+dependencies = [
+    "python-dotenv>=1.0",
+    "faster-whisper>=1.2",
+    "av>=11,<19",
+    "opencv-python>=4.10",
+    "rapidocr-onnxruntime>=1.2.3,<2",
+    "pillow>=10.0",
+    "pytesseract>=0.3.10",
+]

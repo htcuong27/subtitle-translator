@@ -1,0 +1,33 @@
+# Local credentials
+.env
+.env.*
+!.env.example
+.ai-settings.json
+.ai-settings-*
+
+# Python environments, build products and caches
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+build/
+dist/
+*.egg-info/
+
+# Local media, model weights and processing caches
+outputs/
+videos/
+*.mp4
+*.vi.burned.mp4
+*.vi.softsub.mp4
+/preview.sh
+models/
+
+# Local OS and editor metadata
+.DS_Store
+.idea/
+.vscode/

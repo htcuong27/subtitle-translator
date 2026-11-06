@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Video Translate Super - OCR Region Selector</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="logo-area">
+        <div class="logo-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="m5 8 6 6" />
+            <path d="m4 14 6-6 2-3" />
+            <path d="M2 5h12" />
+            <path d="M7 2h1" />
+            <path d="m22 22-5-10-5 10" />
+            <path d="M14 18h6" />
+          </svg>
+        </div>
+        <div>
+          <h1 class="logo-title">Video Translate Super</h1>
+          <p class="logo-subtitle">Chọn vùng phụ đề OCR chính xác &bull; Dịch phim Trung sang Việt</p>
+        </div>
+      </div>
+      <div class="header-badges">
+        <span class="badge badge-accent">RapidOCR + Whisper</span>
+        <span class="badge badge-gemini">Dịch theo hàng đợi</span>
+        <button id="openAiSettings" type="button" class="btn btn-sm btn-secondary">Cài đặt AI</button>
+      </div>
+    </header>
+
+    <!-- Main Workspace Grid -->
+    <main class="workspace-grid">
+      <!-- Left Column: Video & Crop Selection -->
+      <section class="panel panel-main">
+        <div class="panel-header">
+          <div class="panel-title-wrap">
+            <span class="panel-icon">🎬</span>
+            <h2>01 · Nguồn video & vùng phụ đề</h2>
+          </div>
+          <div class="video-picker-wrap">
+            <select id="videoSelect" class="form-select" aria-label="Video đang xem">
+              <option value="">Đang tải danh sách video...</option>
+            </select>
+            <button id="btnRefreshVideos" class="btn btn-icon" title="Làm mới danh sách video">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="custom-path-bar">
+          <button id="btnChooseFolder" class="btn btn-secondary">Chọn thư mục video…</button>
+          <span id="sourceFolder" aria-live="polite">Chưa chọn thư mục</span>
+        </div>
+
+        <details class="source-list"><summary>Danh sách video / chọn hàng đợi</summary>
+        <div class="input-queue">
+          <div class="queue-toolbar"><div><h3>Video đầu vào</h3><p>Chọn nhiều video; mỗi video hoàn tất SRT → Burn trước khi chạy video tiếp theo.</p></div>
+            <button id="btnSelectAll" class="btn btn-sm btn-secondary">Chọn tất cả</button>
+            <button id="btnClearSelection" class="btn btn-sm btn-secondary">Bỏ chọn</button>
+          </div>
+          <div id="videoQueue" class="video-queue" aria-label="Chọn video đầu vào"></div>
+          <p id="selectionCount" class="selection-count" aria-live="polite">Đã chọn 0 video</p>
+        </div>
+
+        </details>
+
+        <div class="edit-toolbar">
+          <label class="checkbox-label"><input id="hideVideo" type="checkbox" aria-controls="videoPreview">Ẩn video</label>
+        </div>
+        <div id="videoPreview">
+          <div class="edit-toolbar">
+            <label class="checkbox-label"><input id="editOnVideo" type="checkbox">Sửa chữ trên video</label>
+            <span class="card-desc">Bật để sửa phụ đề. Tắt để chỉnh vùng OCR.</span>
+            <button id="expandVideo" class="btn btn-sm btn-secondary">Phóng to video</button>
+          </div>
+          <h3>Video gốc · sửa lớp phụ đề trên hình</h3>
+          <!-- Video Player & Canvas Container -->
+          <div class="stage-container" id="stageContainer">
+            <div class="stage-wrapper" id="stageWrapper">
+              <video id="videoElement" playsinline preload="metadata" muted></video>
+              <canvas id="cropCanvas"></canvas>
+              <div id="subtitleOverlay" aria-label="Phụ đề có thể sửa trực tiếp"></div>
+              <div id="cropBoxGuide" class="crop-guide-overlay">
+                <div class="crop-info-tag" id="cropInfoTag">Y: 78% - 96% | X: 12% - 88%</div>
+              </div>
+              <div class="canvas-loading" id="stageLoading" style="display: none;">
+                <div class="spinner"></div>
+                <span>Đang trích xuất frame...</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Timeline & Playback Bar -->
+        <div class="timeline-bar">
+          <div class="timeline-controls">
+            <button id="btnStepBackLarge" class="btn btn-sm btn-icon" title="Lùi 5 giây">-5s</button>
+            <button id="btnStepBack" class="btn btn-sm btn-icon" title="Lùi 1 giây">-1s</button>
+            <button id="btnPlayPause" class="btn btn-sm btn-primary btn-play">
+              <span id="playIcon">▶</span>
+            </button>
+            <button id="btnStepForward" class="btn btn-sm btn-icon" title="Tiến 1 giây">+1s</button>
+            <button id="btnStepForwardLarge" class="btn btn-sm btn-icon" title="Tiến 5 giây">+5s</button>
+            <span class="time-display" id="timeDisplay">00:00.00 / 00:00.00</span>
+          </div>
+          <input type="range" id="timelineSlider" class="timeline-slider" min="0" max="100" step="0.1" value="0">
+        </div>
+
+        <p id="ocrDetectionStatus" role="status"></p>
+        <div class="custom-path-bar">
+          <select id="ocrRegionSelect" class="form-select" aria-label="Vùng đang chỉnh"><option value="0">OCR 1</option></select>
+          <button id="btnAddOcrRegion" class="btn btn-secondary">+ Vùng OCR</button>
+          <button id="btnDeleteOcrRegion" class="btn btn-secondary">Xóa vùng</button>
+        </div>
+        <p>Vùng OCR được dò khi mở video. Bạn có thể chỉnh và lưu riêng cho từng video.</p>
+        <details class="ocr-details"><summary>Thông số OCR nâng cao</summary>
+        <!-- Crop Presets & Coordinates Bar -->
+        <div class="crop-presets-bar">
+          <span class="preset-label">Vùng chọn mẫu:</span>
+          <div class="preset-buttons">
+            <button class="btn btn-preset active" data-preset="bottom_standard">Dưới chuẩn (78%-96%)</button>
+            <button class="btn btn-preset" data-preset="bottom_low">Dưới thấp (84%-97%)</button>
+            <button class="btn btn-preset" data-preset="middle">Giữa hình (45%-55%)</button>
+            <button class="btn btn-preset" data-preset="top">Phía trên (5%-18%)</button>
+            <button class="btn btn-preset" data-preset="full_width">Rộng ngang (10%-90%)</button>
+            <button id="btnResetCrop" class="btn btn-preset btn-outline" title="Khôi phục vùng mặc định">Đặt lại</button>
+            <button id="btnSaveDefaultCrop" class="btn btn-preset btn-accent-preset" title="Ghi nhớ toạ độ này làm mặc định cho các video">💾 Lưu mặc định</button>
+          </div>
+          <span id="savedCropBadge" class="saved-crop-badge" style="display: none;">Đã ghi nhớ toạ độ</span>
+        </div>
+
+        <!-- Coordinates Details Readout -->
+        <div class="coords-readout">
+          <div class="coord-item">
+            <span class="coord-name">Y Min (Đỉnh):</span>
+            <input type="number" id="inputYmin" class="form-input-number" min="0" max="100" step="0.5" value="78">%
+          </div>
+          <div class="coord-item">
+            <span class="coord-name">Y Max (Đáy):</span>
+            <input type="number" id="inputYmax" class="form-input-number" min="0" max="100" step="0.5" value="96">%
+          </div>
+          <div class="coord-item">
+            <span class="coord-name">X Min (Trái):</span>
+            <input type="number" id="inputXmin" class="form-input-number" min="0" max="100" step="0.5" value="12">%
+          </div>
+          <div class="coord-item">
+            <span class="coord-name">X Max (Phải):</span>
+            <input type="number" id="inputXmax" class="form-input-number" min="0" max="100" step="0.5" value="88">%
+          </div>
+          <div class="coord-item coord-param">
+            <span class="coord-name">Tham số CLI:</span>
+            <code id="cliParamText">--crop-box 0.78,0.96,0.12,0.88</code>
+          </div>
+        </div>
+        </details>
+      </section>
+
+      <!-- Right Column: OCR Test, Translation Config & Live Terminal -->
+      <section class="panel panel-side">
+
+
+        <div class="card" id="subtitleEditor">
+          <h3>Chỉnh chữ trên video</h3>
+          <p class="card-desc">Tải phụ đề, tua video rồi bấm vào chữ trên hình để sửa. Chọn câu bên dưới để sửa thời gian. Chữ gốc đã dính trong hình không sửa trực tiếp được.</p>
+          <button id="loadSubtitles" class="btn btn-secondary">Tải SRT của video đang xem</button>
+          <div id="cueList" class="cue-list" aria-label="Danh sách câu phụ đề"></div>
+          <p id="selectedCue" class="card-desc">Chưa chọn câu. Tải phụ đề hoặc thêm câu tại thời điểm đang xem.</p>
+          <label class="form-label" for="instantText">Nội dung câu đang chọn / câu mới</label>
+          <textarea id="instantText" class="form-input" rows="3"></textarea>
+          <button id="useOcrText" class="btn btn-secondary">Lấy chữ OCR vừa đọc</button>
+          <button id="translateText" class="btn btn-secondary">Dịch sang Việt (AI)</button>
+          <div class="output-folder-row">
+            <label>Bắt đầu (giây)<input id="textStart" class="form-input" type="number" min="0" step="0.1" value="0"></label>
+            <label>Kết thúc (giây)<input id="textEnd" class="form-input" type="number" min="0" step="0.1" value="3"></label>
+          </div>
+          <button id="textNow" class="btn btn-secondary">Lấy thời điểm video</button>
+          <button id="appendText" class="btn btn-secondary">+ Câu mới tại đây</button>
+          <div class="cue-actions">
+            <button id="updateCue" class="btn btn-secondary">Áp dụng cho câu đang chọn</button>
+            <button id="deleteCue" class="btn btn-secondary">Xóa câu đang chọn</button>
+          </div>
+          <button id="saveSubtitles" class="btn btn-success">Lưu SRT đã sửa</button>
+          <details><summary>SRT nâng cao và phụ đề nguồn</summary>          <label class="form-label" for="subtitleSource">Phụ đề nguồn / OCR</label>
+          <textarea id="subtitleSource" class="form-input" rows="3" readonly></textarea>
+          <label class="form-label" for="subtitleText">SRT tiếng Việt (sửa nội dung, thời gian; thêm/xóa câu)</label>
+          <textarea id="subtitleText" class="form-input" rows="10"></textarea>
+</details>
+          <p id="editorStatus" role="status" aria-live="polite"></p>
+        </div>
+
+
+        <!-- 1. Instant OCR Verification Card -->
+        <div class="card card-ocr-test">
+          <div class="card-header">
+            <div class="card-title">
+              <span class="card-icon">🔍</span>
+              <h3>02 · Kiểm tra nhận diện</h3>
+            </div>
+            <button id="btnTestOcr" class="btn btn-sm btn-accent">
+              <span class="btn-spinner" id="ocrSpinner" style="display: none;"></span>
+              <span>Test OCR Ngay</span>
+            </button>
+          </div>
+          <p class="card-desc">Cắt khung hình hiện tại theo vùng khoanh và đọc thử bằng RapidOCR để đảm bảo phụ đề nằm trọn trong khung.</p>
+
+          <div class="ocr-preview-box">
+            <div class="ocr-crop-thumb-wrap">
+              <img id="ocrCropThumb" class="ocr-crop-thumb" alt="Ảnh crop mẫu" style="display: none;">
+              <div id="ocrEmptyPlaceholder" class="ocr-placeholder">
+                <span>Chưa có dữ liệu test. Bấm <b>Test OCR Ngay</b> để kiểm tra.</span>
+              </div>
+            </div>
+            <div class="ocr-text-result" id="ocrResultContainer">
+              <div class="result-label">Văn bản nhận diện:</div>
+              <div id="ocrResultText" class="result-text">[Chưa thử nghiệm]</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Translation Execution Card -->
+        <div class="card card-exec">
+          <div class="card-header">
+            <div class="card-title">
+              <span class="card-icon">🚀</span>
+              <h3>03 · Dịch & xuất kết quả</h3>
+            </div>
+            <div class="header-status-group">
+              <span class="status-indicator" id="statusIndicator">
+                <span class="status-dot status-idle" id="statusDot"></span>
+                <span id="statusText">Sẵn sàng</span>
+              </span>
+              <button type="button" id="btnResetProcess" class="btn-terminal-action" title="Đặt lại trạng thái nếu bị kẹt">Reset</button>
+            </div>
+          </div>
+
+          <div class="exec-options">
+            <div class="option-group">
+              <label class="form-label">Chế độ đầu ra:</label>
+              <div class="radio-options">
+                <label class="radio-label radio-label-highlight">
+                  <input type="radio" name="outputMode" value="srt_burn" checked>
+                  <span>⚡ <b>SRT rồi Burn</b> (Chạy SRT xong rồi Burn video luôn)</span>
+                </label>
+                <label class="radio-label">
+                  <input type="radio" name="outputMode" value="srt">
+                  <span><b>SRT</b> (Chỉ tạo file .vi.srt)</span>
+                </label>
+                <label class="radio-label">
+                  <input type="radio" name="outputMode" value="burn">
+                  <span><b>Burn</b> (In phụ đề vào video)</span>
+                </label>
+                <label class="radio-label">
+                  <input type="radio" name="outputMode" value="soft">
+                  <span><b>Softsub</b> (MP4 kèm track phụ đề)</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Output Folder Selection with Samples & Live Preview -->
+            <div class="option-group">
+              <div class="option-header-row">
+                <label class="form-label" for="outputFolder">Thư mục lưu kết quả (--output):</label>
+                <span class="sample-label">Gợi ý mẫu nhanh:</span>
+              </div>
+              <div class="output-folder-row">
+                <input type="text" id="outputFolder" class="form-input" placeholder="outputs/{tên-bộ}">
+                <button type="button" id="btnDefaultOutput" class="btn btn-sm btn-secondary" title="Đặt về mặc định">Mẫu 2</button>
+              </div>
+
+              <!-- Quick Sample Buttons -->
+              <div class="output-sample-chips" id="outputSampleChips">
+                <button type="button" class="chip-sample" data-sample="outputs">Mẫu 1: <code>outputs</code></button>
+                <button type="button" class="chip-sample active" id="chipSeriesFolder" data-sample="series">Mẫu 2: <code>outputs/{tên-bộ}</code> (Mặc định)</button>
+                <button type="button" class="chip-sample" data-sample="outputs/preview">Mẫu 3: <code>outputs/preview</code> (Xem thử)</button>
+              </div>
+
+              <!-- Live File Output Preview Box -->
+              <div class="output-preview-card">
+                <div class="preview-header">
+                  <span class="preview-icon">📁</span>
+                  <span>Cấu trúc file kết quả sẽ tạo:</span>
+                </div>
+                <div class="preview-path-box">
+                  <div class="preview-path-item" id="previewSrtPath">
+                    <span class="path-badge badge-srt">SRT</span>
+                    <code id="previewSrtText">outputs/ep-001/outputs/ep-001.vi.srt</code>
+                  </div>
+                  <div class="preview-path-item" id="previewVideoPath" style="display: none;">
+                    <span class="path-badge badge-video">VIDEO</span>
+                    <code id="previewVideoText">outputs/ep-001/outputs/ep-001.vi.softsub.mp4</code>
+                  </div>
+                </div>
+                <div class="preview-note">
+                  💡 <b>Khuyên dùng:</b> Đặt dạng <code>outputs/{tên-bộ}</code> (ví dụ: <span id="sampleSeriesText">outputs/cuimianyanjing-ai-UM84QJUH</span>) để toàn bộ các tập của bộ phim được gom riêng vào một thư mục, không bị lẫn với các bộ phim khác.
+                </div>
+              </div>
+            </div>
+
+            <div class="option-row">
+              <label class="form-label" for="recognitionMode">Nhận dạng phụ đề</label>
+              <select id="recognitionMode" class="form-select">
+                <option value="hybrid">Whisper + OCR</option>
+                <option value="ocr" selected>Chỉ OCR (tắt Whisper)</option>
+                <option value="whisper">Chỉ Whisper (tắt OCR)</option>
+              </select>
+            </div>
+          </div>
+
+          <div id="queueProgress" class="queue-progress" aria-live="polite"></div>
+          <div class="action-buttons">
+            <button id="btnStartTranslate" class="btn btn-lg btn-success" disabled>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="5 3 19 12 5 21 5 3"/>
+              </svg>
+              <span>Bắt đầu hàng đợi</span>
+            </button>
+            <button id="btnStopTranslate" class="btn btn-lg btn-danger" style="display: none;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+              </svg>
+              <span>Dừng Tiến Trình</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 3. Terminal Console Output Card -->
+        <div class="card card-terminal">
+          <div class="terminal-header">
+            <div class="terminal-dots">
+              <span class="dot dot-red"></span>
+              <span class="dot dot-yellow"></span>
+              <span class="dot dot-green"></span>
+            </div>
+            <div class="terminal-title">Console Logs</div>
+            <div class="terminal-actions">
+              <button id="btnClearLog" class="btn-terminal-action" title="Xóa log">Xóa</button>
+              <button id="btnCopyLog" class="btn-terminal-action" title="Sao chép log">Copy</button>
+            </div>
+          </div>
+          <div class="terminal-body" id="terminalLogs">
+            <div class="terminal-line log-system">Sẵn sàng. Chọn video, căn chỉnh vùng phụ đề và bấm bắt đầu.</div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+          <dialog id="aiSettings" class="ai-dialog" aria-labelledby="aiTitle">
+          <div class="ai-dialog-heading"><div><span class="ai-eyebrow">KẾT NỐI DỊCH THUẬT</span><h2 id="aiTitle">Cài đặt AI</h2><p>Chọn model và quản lý API key của bạn.</p></div><button id="closeAiSettings" type="button" class="btn btn-icon" aria-label="Đóng cài đặt AI">✕</button></div>
+          <form id="aiForm" class="ai-form" autocomplete="off">
+            <section class="ai-section"><h3>01 · Kết nối</h3><label for="aiProvider">Nhà cung cấp</label>
+            <select id="aiProvider" class="form-select">
+              <option value="gemini">Google Gemini</option>
+              <option value="openai">OpenAI · GPT</option>
+              <option value="anthropic">Anthropic · Claude</option>
+              <option value="compatible">API tương thích OpenAI</option>
+            </select>
+            <label for="aiModel">Mã model</label>
+            <input id="aiModel" class="form-input" required>
+            <label id="aiBaseField" hidden>
+              Base URL (ví dụ https://api.example.com/v1)
+              <input id="aiBaseUrl" class="form-input" type="url">
+            </label>
+            </section><section class="ai-section"><h3>02 · API key</h3><p class="card-desc">Để trống để tiếp tục dùng key đã lưu trên máy.</p><label for="aiKey">Key chính</label>
+            <input id="aiKey" class="form-input" type="password" autocomplete="new-password">
+            <label class="checkbox-label"><input id="aiClearKey" type="checkbox">Xóa key đang dùng</label>
+            </section><section class="ai-section" id="aiBackupField" hidden><h3>03 · Xoay key Gemini</h3>
+              <label for="aiBackupKeys">Key Gemini dự phòng (cách nhau bằng dấu phẩy)</label>
+              <input id="aiBackupKeys" class="form-input" type="password" autocomplete="new-password">
+              <label class="checkbox-label"><input id="aiClearBackupKeys" type="checkbox">Xóa danh sách key dự phòng</label>
+              <p class="card-desc">App thử key kế tiếp khi Gemini trả HTTP 429. Nhập danh sách mới để thay thế danh sách đã lưu.</p>
+            </section>
+            <p id="aiStatus" class="ai-feedback" role="status"></p><div class="ai-actions">
+            <button id="aiSave" type="submit" class="btn btn-success" disabled>Lưu cài đặt AI</button>
+            <button id="aiTest" type="submit" class="btn btn-secondary" disabled>Test kết nối</button>
+            </div>
+          </form>
+        </dialog>
+<script src="subtitles.js"></script>
+  <script src="app.js?v=full-ai-1"></script>
+
+</body>
+</html>
