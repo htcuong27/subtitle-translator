@@ -146,3 +146,7 @@ node --check web/app.js
 | `recognition.py`, `gemini.py` | Nhận dạng, dịch AI và xử lý lỗi dịch vụ. |
 | `subtitles.py`, `subtitle_editor.py`, `media.py` | SRT, chỉnh sửa và thao tác FFmpeg. |
 | `tests/` | Kiểm thử Python và JavaScript chạy offline. |
+
+## License
+
+Mã nguồn của dự án được phát hành theo [MIT License](LICENSE). Các thư viện, model và dịch vụ bên thứ ba có điều khoản sử dụng riêng.
