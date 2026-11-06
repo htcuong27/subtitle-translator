@@ -133,6 +133,8 @@ Hàng đợi xử lý từng video; video lỗi được đánh dấu và các v
 
 ## Phát triển và kiểm thử
 
+GitHub Actions chạy các kiểm thử dưới đây trên Ubuntu (Python 3.11) và macOS (Python 3.13) khi push hoặc tạo/cập nhật pull request.
+
 ```sh
 uv run python -m unittest -v
 node --test tests/*.cjs
