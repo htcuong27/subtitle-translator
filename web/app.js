@@ -1,5 +1,5 @@
 /**
- * Video Translate Super - OCR Region Selector & Translation Manager
+ * Subtitle Translator - OCR Region Selector & Translation Manager
  */
 
 (function () {

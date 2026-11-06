@@ -1,4 +1,4 @@
-# Video Translate Super
+# Subtitle Translator
 
 Công cụ tạo phụ đề tiếng Việt cho video tiếng Trung, kết hợp nhận dạng giọng nói, OCR và dịch bằng AI. Ứng dụng chạy trên máy, có giao diện web để chọn vùng phụ đề và chỉnh sửa SRT, cùng CLI để xử lý theo lô.
 

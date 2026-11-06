@@ -1,5 +1,5 @@
 [project]
-name = "video-translate-super"
+name = "subtitle-translator"
 version = "0.1.0"
 description = "Dịch phụ đề video tiếng Trung sang tiếng Việt"
 requires-python = ">=3.11"
